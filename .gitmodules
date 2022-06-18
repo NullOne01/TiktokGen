@@ -7,3 +7,12 @@
 [submodule "modules/glfw"]
 	path = modules/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "modules/opencv"]
+	path = modules/opencv
+	url = https://github.com/opencv/opencv.git
+[submodule "modules/plog"]
+	path = modules/plog
+	url = https://github.com/SergiusTheBest/plog.git
+[submodule "modules/imgui-filebrowser"]
+	path = modules/imgui-filebrowser
+	url = https://github.com/AirGuanZ/imgui-filebrowser.git
