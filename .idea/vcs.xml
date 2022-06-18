@@ -3,6 +3,8 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/modules/SDL" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/modules/glfw" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/modules/imgui" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/modules/opencv" vcs="Git" />
   </component>
 </project>
