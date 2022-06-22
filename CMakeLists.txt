@@ -6,6 +6,8 @@ if (APPLE)
     enable_language(OBJC)
 endif ()
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/modules)
 
 set(GLFW_DIR ${LIB_DIR}/glfw)
@@ -30,7 +32,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 set(PLOG_DIR ${LIB_DIR}/plog)
 include_directories(${PLOG_DIR}/include)
 
-add_library(IMGUI)
+add_library(IMGUI src/view/utils/TextFunctions.h)
 set(IMGUI_DIR ${LIB_DIR}/imgui)
 set(IMGUI_FILE_DIR ${LIB_DIR}/imgui-filebrowser)
 include_directories(${IMGUI_DIR})
