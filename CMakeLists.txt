@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.20)
 project(TiktokGen)
 
 set(CMAKE_CXX_STANDARD 20)
-if(APPLE)
+if (APPLE)
     enable_language(OBJC)
-endif()
+endif ()
 
 set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/modules)
 
@@ -16,6 +16,8 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(${GLFW_DIR})
 
 set(SDL2_DIR ${LIB_DIR}/SDL)
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 include_directories(${SDL2_DIR})
 add_subdirectory(${SDL2_DIR})
 
@@ -28,11 +30,11 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 set(PLOG_DIR ${LIB_DIR}/plog)
 include_directories(${PLOG_DIR}/include)
 
-add_library(IMGUI STATIC src/model/generators/Generator.h src/view/utils/SDL_GLContextDeleter.h src/model/generators/frame_generators/utils/GeneratorRequirementType.h)
+add_library(IMGUI)
 set(IMGUI_DIR ${LIB_DIR}/imgui)
 set(IMGUI_FILE_DIR ${LIB_DIR}/imgui-filebrowser)
 include_directories(${IMGUI_DIR})
-target_sources( IMGUI
+target_sources(IMGUI
         PRIVATE
         ${IMGUI_DIR}/imgui_demo.cpp
         ${IMGUI_DIR}/imgui_draw.cpp
@@ -46,15 +48,15 @@ target_sources( IMGUI
         ${IMGUI_DIR}/backends/imgui_impl_sdl.cpp
         )
 
-target_include_directories( IMGUI
+target_include_directories(IMGUI
         PUBLIC ${IMGUI_DIR}
         PUBLIC ${IMGUI_DIR}/backends
         PUBLIC ${IMGUI_DIR}/misc/cpp
         PUBLIC ${SDL2_DIR}/include
         PUBLIC ${IMGUI_FILE_DIR}/
         )
-target_link_libraries(IMGUI glfw SDL2)
+target_link_libraries(IMGUI glfw SDL2main SDL2-static)
 
 find_package(OpenGL REQUIRED)
-link_libraries(IMGUI glfw)
-add_executable(TiktokGen main.cpp src/model/generators/frame_generators/FrameGenerator.cpp src/model/generators/frame_generators/FrameGenerator.h src/view/Renderer.cpp src/view/Renderer.h src/view/utils/SDLWindowDeleter.h src/model/user/UserState.cpp src/model/user/UserState.h src/view_model/MainViewModel.cpp src/view_model/MainViewModel.h src/model/generators/frame_generators/utils/GeneratorName.h src/view/MainView.cpp src/view/MainView.h src/model/generators/frame_generators/TextVideoGenerator.cpp src/model/generators/frame_generators/TextVideoGenerator.h src/model/generators/frame_generators/utils/GeneratorRequirement.h src/view_model/utils/LogFunctions.h)
+link_libraries(IMGUI glfw ${OpenCV_LIBS})
+add_executable(TiktokGen main.cpp src/model/generators/frame_generators/FrameGenerator.cpp src/model/generators/frame_generators/FrameGenerator.h src/view/Renderer.cpp src/view/Renderer.h src/view/utils/SDLWindowDeleter.h src/model/user/UserState.cpp src/model/user/UserState.h src/view_model/MainViewModel.cpp src/view_model/MainViewModel.h src/model/generators/frame_generators/utils/GeneratorName.h src/view/MainView.cpp src/view/MainView.h src/model/generators/frame_generators/TextVideoGenerator.cpp src/model/generators/frame_generators/TextVideoGenerator.h src/model/generators/frame_generators/utils/GeneratorRequirement.h src/view_model/utils/LogFunctions.h src/model/generators/frame_generators/NoneGenerator.cpp src/model/generators/frame_generators/NoneGenerator.h src/model/generators/Generator.h src/view/utils/SDL_GLContextDeleter.h src/model/generators/frame_generators/utils/GeneratorRequirementType.h src/model/generators/video_generators/VideoGenerator.cpp src/model/generators/video_generators/VideoGenerator.h src/view_model/utils/StringFunctions.h)
