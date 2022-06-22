@@ -6,6 +6,7 @@
 #include "../generators/frame_generators/utils/GeneratorRequirementType.h"
 #include "../generators/frame_generators/FrameGenerator.h"
 #include "../generators/frame_generators/TextVideoGenerator.h"
+#include "../generators/frame_generators/NoneGenerator.h"
 
 class UserState {
 public:
@@ -16,6 +17,8 @@ public:
     FrameGenerator *createGenerator() {
         switch (chosen_generator) {
             case 0:
+                return new NoneGenerator();
+            case 1:
                 return new TextVideoGenerator(data_[0], data_[1]);
         }
 
@@ -23,10 +26,12 @@ public:
     }
 
     const std::vector<std::vector<GeneratorRequirement>> generator_requirements = {
+            NoneGenerator::requirements,
             TextVideoGenerator::requirements
     };
 
     const std::vector<std::string> generator_names = {
+            NoneGenerator::name,
             TextVideoGenerator::name
     };
 

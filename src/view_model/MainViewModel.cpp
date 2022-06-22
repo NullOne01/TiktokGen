@@ -1,6 +1,7 @@
 #include "MainViewModel.h"
 #include "plog/Log.h"
 #include "utils/LogFunctions.h"
+#include "../model/generators/video_generators/VideoGenerator.h"
 
 MainViewModel::MainViewModel(MainView &view) : view_(view) {}
 
@@ -26,10 +27,10 @@ void MainViewModel::showMainWindow() {
 }
 
 void MainViewModel::showRequirementWindows() {
-    for (const auto &requirement_vec: user_state_->generator_requirements) {
-        for (int i = 0; i < requirement_vec.size(); ++i) {
-            bindRequirement(requirement_vec[i], i);
-        }
+    auto &needed_requirements = user_state_->generator_requirements[user_state_->chosen_generator];
+
+    for (int i = 0; i < needed_requirements.size(); ++i) {
+        bindRequirement(needed_requirements[i], i);
     }
 }
 
@@ -48,4 +49,10 @@ void MainViewModel::bindRequirement(const GeneratorRequirement &requirement, int
 
 void MainViewModel::onGenerateButton() {
     LOGD << "User clicked generate button " + std::string(*user_state_);
+
+    std::unique_ptr<FrameGenerator> frame_generator(user_state_->createGenerator());
+    std::unique_ptr<VideoGenerator> video_generator = std::make_unique<VideoGenerator>(*frame_generator);
+    video_generator->generate();
+
+    LOGD << "User generated video";
 }
