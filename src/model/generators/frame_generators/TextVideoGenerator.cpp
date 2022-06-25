@@ -7,6 +7,7 @@
 #include <iostream>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
+#include <opencv2/freetype.hpp>
 
 TextVideoGenerator::TextVideoGenerator(std::string path_to_video, std::string text) : path_to_video_(std::move(
         path_to_video)), text_(std::move(text)) {}
@@ -20,6 +21,10 @@ Generator<cv::Mat> TextVideoGenerator::frameGenerator() {
         LOGD << "Video cannot be opened. Path: " + path_to_video_;
     }
 
+    cv::Ptr<cv::freetype::FreeType2> ft2;
+    ft2 = cv::freetype::createFreeType2();
+    ft2->loadFontData("resources/DejaVuSansCondensed.ttf", 0);
+
     for (int i = 0; i < 600; ++i) {
         cv::Mat frame(1920, 1080, CV_8UC4, cv::Scalar(255, 255, 255, 255));
 
@@ -28,9 +33,17 @@ Generator<cv::Mat> TextVideoGenerator::frameGenerator() {
         background_video_.read(background_video_frame);
         cv::resize(background_video_frame, frame, {1080, 1920}, cv::INTER_CUBIC);
 
+        double text_width = 400;
+        cv::Size multiline_size = TextFunctions::getSizeOfLines(ft2, text_, text_width,
+                                                                60, CV_RGB(255, 255, 255), 2,
+                                                                2);
+        cv::Point text_center(frame.cols / 2 - multiline_size.width / 2, frame.rows / 2 - multiline_size.height / 2);
         // Replace with cv namespace?
-        TextFunctions::putTextMultiline(frame, text_, cv::Point(10, frame.rows / 2), cv::FONT_HERSHEY_DUPLEX,
-                                        1.0, CV_RGB(0, 0, 0), 300);
+        TextFunctions::putTextMultiline(ft2, frame,
+                                        text_,
+                                        text_center,
+                                        60, CV_RGB(255, 255, 255), text_width,
+                                        2);
 //        cv::putText(frame, //target image
 //                    lines, //text
 //                    cv::Point(10, frame.rows / 2), //top-left position

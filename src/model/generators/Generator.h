@@ -2,6 +2,7 @@
 #define TIKTOKGEN_GENERATOR_H
 
 #include <experimental/coroutine>
+#include <exception>
 
 template<typename T>
 struct Generator {

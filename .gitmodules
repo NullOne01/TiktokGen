@@ -16,3 +16,12 @@
 [submodule "modules/imgui-filebrowser"]
 	path = modules/imgui-filebrowser
 	url = https://github.com/AirGuanZ/imgui-filebrowser.git
+[submodule "modules/opencv_contrib"]
+	path = modules/opencv_contrib
+	url = https://github.com/opencv/opencv_contrib.git
+[submodule "modules/harfbuzz"]
+	path = modules/harfbuzz
+	url = https://github.com/harfbuzz/harfbuzz.git
+[submodule "modules/freetype"]
+	path = modules/freetype
+	url = https://github.com/freetype/freetype.git

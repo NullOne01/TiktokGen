@@ -70,6 +70,12 @@ Renderer::Renderer() {
     ImGui_ImplSDL2_InitForOpenGL(window_.get(), gl_context_.get());
     ImGui_ImplOpenGL3_Init(glsl_version);
 
+    ImGuiIO &io = ImGui::GetIO();
+    ImFont *font = io.Fonts->AddFontFromFileTTF("resources/DejaVuSansCondensed.ttf", 18.0f, NULL,
+                                                io.Fonts->GetGlyphRangesCyrillic());
+    IM_ASSERT(font != nullptr);
+
+
     LOGD << "Renderer is started";
 }
 

@@ -1,11 +1,11 @@
 #ifndef TIKTOKGEN_RENDERER_H
 #define TIKTOKGEN_RENDERER_H
 
-
 #include "SDL_video.h"
 #include "utils/SDLWindowDeleter.h"
 #include "imgui.h"
 #include "utils/SDL_GLContextDeleter.h"
+#include <memory>
 
 class Renderer {
 public:

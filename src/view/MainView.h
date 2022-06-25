@@ -5,12 +5,15 @@
 #include <vector>
 #include "Renderer.h"
 #include "imfilebrowser.h"
+#include "opencv2/core/mat.hpp"
 
 class MainView {
 public:
     explicit MainView(const Renderer &renderer);
 
     void logWindow(const std::string &log) const;
+
+    void matWindow(const cv::Mat &image) const;
 
     void textInputWindow(const std::string &name, std::string *text) const;
 

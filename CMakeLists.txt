@@ -7,6 +7,8 @@ if (APPLE)
 endif ()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# Set runtime resources.
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/)
 
 set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/modules)
 
@@ -23,11 +25,13 @@ set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 include_directories(${SDL2_DIR})
 add_subdirectory(${SDL2_DIR})
 
-set(OpenCV_DIR ${LIB_DIR}/opencv_build)
+set(OpenCV_DIR ${LIB_DIR}/opencv_extra_build)
+SET(WITH_FREETYPE ON CACHE BOOL "" FORCE)
 #include_directories(${OPENCV_DIR}/include)
 #add_subdirectory(${OPENCV_DIR})
 find_package(OpenCV)
 include_directories(${OpenCV_INCLUDE_DIRS})
+include_directories(${OpenCV_DIR})
 
 set(PLOG_DIR ${LIB_DIR}/plog)
 include_directories(${PLOG_DIR}/include)
