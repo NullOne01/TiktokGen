@@ -1,10 +1,13 @@
 #include "VideoGenerator.h"
+#include "../audio_generators/AudioGenerator.h"
+#include "../audio_generators/AddAudioGenerator.h"
 #include <opencv2/videoio.hpp>
 
 VideoGenerator::VideoGenerator(FrameGenerator &frameGenerator) : frame_generator_(frameGenerator) {}
 
 void VideoGenerator::generate() {
-    cv::VideoWriter video("out1.mp4", cv::VideoWriter::fourcc('H','2','6','4'),
+    std::string video_name = "out1.mp4";
+    cv::VideoWriter video(video_name, cv::VideoWriter::fourcc('H', '2', '6', '4'),
                           60,
                           cv::Size(1080, 1920));
 
@@ -13,6 +16,10 @@ void VideoGenerator::generate() {
         auto frame = gen();
         video.write(frame);
     }
+
+    std::string audio_name = "sample.mp3";
+    std::unique_ptr<AudioGenerator> audio_gen = std::make_unique<AddAudioGenerator>(video_name, audio_name);
+    audio_gen->addAudio();
 
     video.release();
 }
