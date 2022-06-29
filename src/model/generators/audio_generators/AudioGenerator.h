@@ -9,7 +9,7 @@ public:
 
     virtual void addAudio() = 0;
 
-    virtual ~AudioGenerator() = 0;
+    virtual ~AudioGenerator();
 
 private:
     std::string path_to_video_;

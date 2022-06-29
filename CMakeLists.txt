@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
+
+set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/modules)
+set(CMAKE_TOOLCHAIN_FILE "${LIB_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        CACHE STRING "Vcpkg toolchain file")
+
 project(TiktokGen)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -10,14 +15,20 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # Set runtime resources.
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/resources/ DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources/)
 
-set(LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/modules)
-
 set(GLFW_DIR ${LIB_DIR}/glfw)
 include_directories(${GLFW_DIR})
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(${GLFW_DIR})
+
+set(FFMPEG_DIR ${LIB_DIR}/FFmpeg)
+find_package(PkgConfig REQUIRED)
+find_package(FFMPEG REQUIRED)
+include_directories(${FFMPEG_INCLUDE_DIRS})
+link_libraries(${FFMPEG_LIBRARY})
+link_libraries(${FFMPEG_LIBRARIES})
+link_libraries(${FFMPEG_LIBRARY_DIRS})
 
 set(SDL2_DIR ${LIB_DIR}/SDL)
 set(SDL_STATIC ON CACHE BOOL "" FORCE)

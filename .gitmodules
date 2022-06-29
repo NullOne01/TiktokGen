@@ -25,3 +25,6 @@
 [submodule "modules/freetype"]
 	path = modules/freetype
 	url = https://github.com/freetype/freetype.git
+[submodule "modules/vcpkg"]
+	path = modules/vcpkg
+	url = https://github.com/microsoft/vcpkg
