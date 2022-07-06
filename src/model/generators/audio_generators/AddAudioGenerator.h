@@ -41,6 +41,8 @@ private:
     int open_output_file(const char *filename);
 
     int write_all_frames(AVFormatContext *ctx, int stream_num);
+
+    void free_resources();
 };
 
 

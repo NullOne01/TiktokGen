@@ -20,28 +20,34 @@ void AddAudioGenerator::addAudio() {
     int ret;
     if ((ret = open_input_file(path_to_video_.c_str())) < 0) {
         PLOGD << "AddAudio: Couldn't open input video file";
+        free_resources();
         return;
     }
     if ((ret = open_input_audio(path_to_audio_.c_str())) < 0) {
         PLOGD << "AddAudio: Couldn't open input audio file";
+        free_resources();
         return;
     }
     if ((ret = open_output_file(path_to_output_.c_str())) < 0) {
         PLOGD << "AddAudio: Couldn't open output video file";
+        free_resources();
         return;
     }
 
     if ((ret = write_all_frames(ifmt_ctx, 0)) < 0) {
         PLOGD << "AddAudio: Couldn't write video frames";
+        free_resources();
         return;
     }
 
     if ((ret = write_all_frames(ifmt_audio_ctx, 1)) < 0) {
         PLOGD << "AddAudio: Couldn't write audio frames";
+        free_resources();
         return;
     }
 
     av_write_trailer(ofmt_ctx);
+    free_resources();
 }
 
 AddAudioGenerator::~AddAudioGenerator() {
@@ -57,57 +63,62 @@ int AddAudioGenerator::open_input_file(const char *filename) {
     int ret;
     unsigned int i;
 
-    ifmt_ctx = NULL;
-    if ((ret = avformat_open_input(&ifmt_ctx, filename, NULL, NULL)) < 0) {
-        av_log(NULL, AV_LOG_ERROR, "Cannot open input file\n");
+    ifmt_ctx = nullptr;
+    if ((ret = avformat_open_input(&ifmt_ctx, filename, nullptr, nullptr)) < 0) {
+        PLOGD << "AddAudio: Cannot open input file";
         return ret;
     }
 
-    if ((ret = avformat_find_stream_info(ifmt_ctx, NULL)) < 0) {
-        av_log(NULL, AV_LOG_ERROR, "Cannot find stream information\n");
+    if ((ret = avformat_find_stream_info(ifmt_ctx, nullptr)) < 0) {
+        PLOGD << "AddAudio: Cannot find stream information";
         return ret;
     }
 
     stream_ctx = static_cast<StreamContext *>(av_calloc(ifmt_ctx->nb_streams, sizeof(*stream_ctx)));
-    if (!stream_ctx)
+    if (!stream_ctx) {
         return AVERROR(ENOMEM);
+    }
 
     for (i = 0; i < ifmt_ctx->nb_streams; i++) {
         AVStream *stream = ifmt_ctx->streams[i];
         const AVCodec *dec = avcodec_find_decoder(stream->codecpar->codec_id);
         AVCodecContext *codec_ctx;
         if (!dec) {
-            av_log(NULL, AV_LOG_ERROR, "Failed to find decoder for stream #%u\n", i);
+            PLOGD << StringFunctions::stringFormat("AddAudio: Failed to find decoder for stream #%u", i);
             return AVERROR_DECODER_NOT_FOUND;
         }
         codec_ctx = avcodec_alloc_context3(dec);
         if (!codec_ctx) {
-            av_log(NULL, AV_LOG_ERROR, "Failed to allocate the decoder context for stream #%u\n", i);
+            PLOGD << StringFunctions::stringFormat("AddAudio: Failed to allocate the decoder context for stream #%u",
+                                                   i);
             return AVERROR(ENOMEM);
         }
         ret = avcodec_parameters_to_context(codec_ctx, stream->codecpar);
         if (ret < 0) {
-            av_log(NULL, AV_LOG_ERROR, "Failed to copy decoder parameters to input decoder context "
-                                       "for stream #%u\n", i);
+            PLOGD << StringFunctions::stringFormat(
+                        "AddAudio: Failed to copy decoder parameters to input decoder context for stream #%u", i);
             return ret;
         }
         /* Reencode video & audio and remux subtitles etc. */
         if (codec_ctx->codec_type == AVMEDIA_TYPE_VIDEO
             || codec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
-            if (codec_ctx->codec_type == AVMEDIA_TYPE_VIDEO)
-                codec_ctx->framerate = av_guess_frame_rate(ifmt_ctx, stream, NULL);
+            if (codec_ctx->codec_type == AVMEDIA_TYPE_VIDEO) {
+                codec_ctx->framerate = av_guess_frame_rate(ifmt_ctx, stream, nullptr);
+            }
             /* Open decoder */
-            ret = avcodec_open2(codec_ctx, dec, NULL);
+            ret = avcodec_open2(codec_ctx, dec, nullptr);
             if (ret < 0) {
-                av_log(NULL, AV_LOG_ERROR, "Failed to open decoder for stream #%u\n", i);
+                PLOGD << StringFunctions::stringFormat("AddAudio: Failed to open decoder for stream #%u", i);
                 return ret;
             }
         }
+
         stream_ctx[i].dec_ctx = codec_ctx;
 
         stream_ctx[i].dec_frame = av_frame_alloc();
-        if (!stream_ctx[i].dec_frame)
+        if (!stream_ctx[i].dec_frame) {
             return AVERROR(ENOMEM);
+        }
     }
 
     av_dump_format(ifmt_ctx, 0, filename, 0);
@@ -123,55 +134,55 @@ int AddAudioGenerator::open_output_file(const char *filename) {
     int ret;
     unsigned int i;
 
-    ofmt_ctx = NULL;
-    avformat_alloc_output_context2(&ofmt_ctx, NULL, NULL, filename);
+    ofmt_ctx = nullptr;
+    avformat_alloc_output_context2(&ofmt_ctx, nullptr, nullptr, filename);
     if (!ofmt_ctx) {
-        av_log(NULL, AV_LOG_ERROR, "Could not create output context\n");
+        PLOGD << "AddAudio: Could not create output context";
         return AVERROR_UNKNOWN;
     }
 
     // Video
     for (i = 0; i < ifmt_ctx->nb_streams; i++) {
-        out_stream = avformat_new_stream(ofmt_ctx, NULL);
+        out_stream = avformat_new_stream(ofmt_ctx, nullptr);
         if (!out_stream) {
-            av_log(NULL, AV_LOG_ERROR, "Failed allocating output stream\n");
+            PLOGD << "AddAudio: Failed allocating output stream";
             return AVERROR_UNKNOWN;
         }
 
         in_stream = ifmt_ctx->streams[i];
         dec_ctx = stream_ctx[i].dec_ctx;
 
-        if (dec_ctx->codec_type == AVMEDIA_TYPE_VIDEO
-            || dec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
+        if (dec_ctx->codec_type == AVMEDIA_TYPE_VIDEO || dec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
             /* remuxing */
             encoder = avcodec_find_encoder(dec_ctx->codec_id);
             if (!encoder) {
-                av_log(NULL, AV_LOG_FATAL, "Necessary encoder not found\n");
+                PLOGD << "AddAudio: Necessary encoder not found";
                 return AVERROR_INVALIDDATA;
             }
             enc_ctx = avcodec_alloc_context3(encoder);
             if (!enc_ctx) {
-                av_log(NULL, AV_LOG_FATAL, "Failed to allocate the encoder context\n");
+                PLOGD << "AddAudio: Failed to allocate the encoder context";
                 return AVERROR(ENOMEM);
             }
 
             ret = avcodec_parameters_copy(out_stream->codecpar, in_stream->codecpar);
             if (ret < 0) {
-                av_log(NULL, AV_LOG_ERROR, "Copying parameters for stream #%u failed\n", i);
+                PLOGD << StringFunctions::stringFormat("AddAudio: Copying parameters for stream #%u failed", i);
                 return ret;
             }
             out_stream->time_base = in_stream->time_base;
             stream_ctx[i].enc_ctx = enc_ctx;
         } else if (dec_ctx->codec_type == AVMEDIA_TYPE_UNKNOWN) {
-            av_log(NULL, AV_LOG_FATAL, "Elementary stream #%d is of unknown type, cannot proceed\n", i);
+            PLOGD << StringFunctions::stringFormat("AddAudio: Elementary stream #%d is of unknown type, cannot proceed",
+                                                   i);
             return AVERROR_INVALIDDATA;
         }
     }
     // Audio
     for (i = 0; i < ifmt_audio_ctx->nb_streams; i++) {
-        out_stream = avformat_new_stream(ofmt_ctx, NULL);
+        out_stream = avformat_new_stream(ofmt_ctx, nullptr);
         if (!out_stream) {
-            av_log(NULL, AV_LOG_ERROR, "Failed allocating output stream\n");
+            PLOGD << "AddAudio: Failed allocating output stream";
             return AVERROR_UNKNOWN;
         }
 
@@ -183,24 +194,25 @@ int AddAudioGenerator::open_output_file(const char *filename) {
             /* remuxing */
             encoder = avcodec_find_encoder(dec_ctx->codec_id);
             if (!encoder) {
-                av_log(NULL, AV_LOG_FATAL, "Necessary encoder not found\n");
+                PLOGD << "AddAudio: Necessary encoder not found";
                 return AVERROR_INVALIDDATA;
             }
             enc_ctx = avcodec_alloc_context3(encoder);
             if (!enc_ctx) {
-                av_log(NULL, AV_LOG_FATAL, "Failed to allocate the encoder context\n");
+                PLOGD << "AddAudio: Failed to allocate the encoder context";
                 return AVERROR(ENOMEM);
             }
 
             ret = avcodec_parameters_copy(out_stream->codecpar, in_stream->codecpar);
             if (ret < 0) {
-                av_log(NULL, AV_LOG_ERROR, "Copying parameters for stream #%u failed\n", i);
+                PLOGD << StringFunctions::stringFormat("AddAudio: Copying parameters for stream #%u failed", i);
                 return ret;
             }
             out_stream->time_base = in_stream->time_base;
             stream_audio_ctx[i].enc_ctx = enc_ctx;
         } else if (dec_ctx->codec_type == AVMEDIA_TYPE_UNKNOWN) {
-            av_log(NULL, AV_LOG_FATAL, "Elementary stream #%d is of unknown type, cannot proceed\n", i);
+            PLOGD << StringFunctions::stringFormat("AddAudio: Elementary stream #%d is of unknown type, cannot proceed",
+                                                   i);
             return AVERROR_INVALIDDATA;
         }
     }
@@ -209,15 +221,15 @@ int AddAudioGenerator::open_output_file(const char *filename) {
     if (!(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {
         ret = avio_open(&ofmt_ctx->pb, filename, AVIO_FLAG_WRITE);
         if (ret < 0) {
-            av_log(NULL, AV_LOG_ERROR, "Could not open output file '%s'", filename);
+            PLOGD << StringFunctions::stringFormat("AddAudio: Could not open output file '%s'", filename);
             return ret;
         }
     }
 
     /* init muxer, write output file header */
-    ret = avformat_write_header(ofmt_ctx, NULL);
+    ret = avformat_write_header(ofmt_ctx, nullptr);
     if (ret < 0) {
-        av_log(NULL, AV_LOG_ERROR, "Error occurred when opening output file\n");
+        PLOGD << "AddAudio: Error occurred when opening output file";
         return ret;
     }
 
@@ -228,60 +240,68 @@ int AddAudioGenerator::open_input_audio(const char *filename) {
     int ret;
     unsigned int i;
 
-    ifmt_audio_ctx = NULL;
-    if ((ret = avformat_open_input(&ifmt_audio_ctx, path_to_audio_.c_str(), NULL, NULL)) < 0) {
-        av_log(NULL, AV_LOG_ERROR, "Cannot open input audio file\n");
+    ifmt_audio_ctx = nullptr;
+    if ((ret = avformat_open_input(&ifmt_audio_ctx, path_to_audio_.c_str(), nullptr, nullptr)) < 0) {
+        PLOGD << "AddAudio: Cannot open input audio file";
         return ret;
     }
 
-    if ((ret = avformat_find_stream_info(ifmt_audio_ctx, NULL)) < 0) {
-        av_log(NULL, AV_LOG_ERROR, "Cannot find audio stream information\n");
+    if ((ret = avformat_find_stream_info(ifmt_audio_ctx, nullptr)) < 0) {
+        PLOGD << "AddAudio: Cannot find audio stream information";
         return ret;
     }
 
     stream_audio_ctx = static_cast<StreamContext *>(av_calloc(ifmt_audio_ctx->nb_streams, sizeof(*stream_audio_ctx)));
-    if (!stream_audio_ctx)
+    if (!stream_audio_ctx) {
         return AVERROR(ENOMEM);
+    }
 
     for (i = 0; i < ifmt_audio_ctx->nb_streams; i++) {
         AVStream *stream = ifmt_audio_ctx->streams[i];
         const AVCodec *dec = avcodec_find_decoder(stream->codecpar->codec_id);
         AVCodecContext *codec_ctx;
         if (!dec) {
-            av_log(NULL, AV_LOG_ERROR, "Failed to find decoder for stream #%u\n", i);
+            PLOGD << StringFunctions::stringFormat("AddAudio: Failed to find decoder for stream #%u", i);
             return AVERROR_DECODER_NOT_FOUND;
         }
         codec_ctx = avcodec_alloc_context3(dec);
         if (!codec_ctx) {
-            av_log(NULL, AV_LOG_ERROR, "Failed to allocate the decoder context for stream #%u\n", i);
+            PLOGD << StringFunctions::stringFormat("AddAudio: Failed to allocate the decoder context for stream #%u", i);
             return AVERROR(ENOMEM);
         }
         ret = avcodec_parameters_to_context(codec_ctx, stream->codecpar);
         if (ret < 0) {
-            av_log(NULL, AV_LOG_ERROR, "Failed to copy decoder parameters to input decoder context "
-                                       "for stream #%u\n", i);
+            PLOGD << StringFunctions::stringFormat("AddAudio: Failed to copy decoder parameters to input decoder context for stream #%u",
+                                                   i);
             return ret;
         }
         /* Reencode video & audio and remux subtitles etc. */
         if (codec_ctx->codec_type == AVMEDIA_TYPE_AUDIO) {
             /* Open decoder */
-            ret = avcodec_open2(codec_ctx, dec, NULL);
+            ret = avcodec_open2(codec_ctx, dec, nullptr);
             if (ret < 0) {
-                av_log(NULL, AV_LOG_ERROR, "Failed to open decoder for stream #%u\n", i);
+                PLOGD << StringFunctions::stringFormat("AddAudio: Failed to open decoder for stream #%u", i);
                 return ret;
             }
         }
         stream_audio_ctx[i].dec_ctx = codec_ctx;
 
         stream_audio_ctx[i].dec_frame = av_frame_alloc();
-        if (!stream_audio_ctx[i].dec_frame)
+        if (!stream_audio_ctx[i].dec_frame) {
             return AVERROR(ENOMEM);
+        }
     }
 
     av_dump_format(ifmt_audio_ctx, 0, path_to_audio_.c_str(), 0);
     return 0;
 }
 
+/**
+ * Write all frames from given context (stream 0) to output file (stream num given).
+ * @param ctx Given context to take frames from
+ * @param stream_num stream of output file to write into
+ * @return error code (0 if success).
+ */
 int AddAudioGenerator::write_all_frames(AVFormatContext *ctx, int stream_num) {
     int ret;
     AVPacket *packet = nullptr;
@@ -315,4 +335,32 @@ int AddAudioGenerator::write_all_frames(AVFormatContext *ctx, int stream_num) {
 
     av_packet_free(&packet);
     return 0;
+}
+
+void AddAudioGenerator::free_resources() {
+    for (int i = 0; i < ifmt_ctx->nb_streams; i++) {
+        avcodec_free_context(&stream_ctx[i].dec_ctx);
+        if (ofmt_ctx && ofmt_ctx->nb_streams > i && ofmt_ctx->streams[i] && stream_ctx[i].enc_ctx) {
+            avcodec_free_context(&stream_ctx[i].enc_ctx);
+        }
+
+        av_frame_free(&stream_ctx[i].dec_frame);
+    }
+    for (int i = 0; i < ifmt_audio_ctx->nb_streams; i++) {
+        avcodec_free_context(&stream_audio_ctx[i].dec_ctx);
+        if (ofmt_ctx && ofmt_ctx->nb_streams > i && ofmt_ctx->streams[i] && stream_audio_ctx[i].enc_ctx) {
+            avcodec_free_context(&stream_audio_ctx[i].enc_ctx);
+        }
+
+        av_frame_free(&stream_audio_ctx[i].dec_frame);
+    }
+    av_free(stream_ctx);
+    av_free(stream_audio_ctx);
+    avformat_close_input(&ifmt_ctx);
+    avformat_close_input(&ifmt_audio_ctx);
+    if (ofmt_ctx && !(ofmt_ctx->oformat->flags & AVFMT_NOFILE)) {
+        avio_closep(&ofmt_ctx->pb);
+    }
+
+    avformat_free_context(ofmt_ctx);
 }
