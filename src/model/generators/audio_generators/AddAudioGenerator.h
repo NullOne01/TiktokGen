@@ -39,6 +39,8 @@ private:
     int open_input_audio(const char *filename);
 
     int open_output_file(const char *filename);
+
+    int write_all_frames(AVFormatContext *ctx, int stream_num);
 };
 
 

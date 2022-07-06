@@ -1,6 +1,8 @@
 #include "AddAudioGenerator.h"
 #include "plog/Log.h"
 #include "../../../view_model/utils/StringFunctions.h"
+#include <utility>
+#include <string>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -10,20 +12,12 @@ extern "C" {
 #include <libavutil/channel_layout.h>
 #include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
-
 };
-
-#include <utility>
-#include <string>
 
 void AddAudioGenerator::addAudio() {
     // Writing in C is not funny :/
 
     int ret;
-    AVPacket *packet = nullptr;
-    unsigned int stream_index;
-    unsigned int i;
-
     if ((ret = open_input_file(path_to_video_.c_str())) < 0) {
         PLOGD << "AddAudio: Couldn't open input video file";
         return;
@@ -37,57 +31,14 @@ void AddAudioGenerator::addAudio() {
         return;
     }
 
-    if (!(packet = av_packet_alloc())) {
-        PLOGD << "AddAudio: Couldn't allocate packet";
+    if ((ret = write_all_frames(ifmt_ctx, 0)) < 0) {
+        PLOGD << "AddAudio: Couldn't write video frames";
         return;
     }
 
-    while (true) {
-        if ((ret = av_read_frame(ifmt_ctx, packet)) < 0) {
-            break;
-        }
-        stream_index = packet->stream_index;
-        PLOGD << StringFunctions::stringFormat("Demuxer gave frame of stream_index %u, num1: %d, num2: %d", stream_index,
-                                               stream_ctx->enc_ctx->frame_number, stream_ctx->dec_ctx->frame_number);
-
-        /* remux this frame without reencoding */
-        av_packet_rescale_ts(packet,
-                             ifmt_ctx->streams[stream_index]->time_base,
-                             ofmt_ctx->streams[stream_index]->time_base);
-
-        ret = av_interleaved_write_frame(ofmt_ctx, packet);
-        if (ret < 0) {
-            PLOGD << StringFunctions::stringFormat("Demuxer gave frame of stream_index %u", stream_index);
-            av_log(NULL, AV_LOG_ERROR, "av_interleaved_write_frame failed\n");
-//            goto end;
-        }
-
-        av_packet_unref(packet);
-    }
-
-
-    while (true) {
-        if ((ret = av_read_frame(ifmt_audio_ctx, packet)) < 0) {
-            break;
-        }
-        stream_index = packet->stream_index;
-        packet->stream_index = 1;
-        PLOGD << StringFunctions::stringFormat("Demuxer gave frame of stream_index %u, num1: %d, num2: %d", stream_index,
-                                               stream_ctx->enc_ctx->frame_number, stream_ctx->dec_ctx->frame_number);
-
-        /* remux this frame without reencoding */
-        av_packet_rescale_ts(packet,
-                             ifmt_audio_ctx->streams[stream_index]->time_base,
-                             ofmt_ctx->streams[1]->time_base);
-
-        ret = av_interleaved_write_frame(ofmt_ctx, packet);
-        if (ret < 0) {
-            PLOGD << StringFunctions::stringFormat("Demuxer gave frame of stream_index %u", stream_index);
-            av_log(NULL, AV_LOG_ERROR, "av_interleaved_write_frame failed\n");
-//            goto end;
-        }
-
-        av_packet_unref(packet);
+    if ((ret = write_all_frames(ifmt_audio_ctx, 1)) < 0) {
+        PLOGD << "AddAudio: Couldn't write audio frames";
+        return;
     }
 
     av_write_trailer(ofmt_ctx);
@@ -328,5 +279,40 @@ int AddAudioGenerator::open_input_audio(const char *filename) {
     }
 
     av_dump_format(ifmt_audio_ctx, 0, path_to_audio_.c_str(), 0);
+    return 0;
+}
+
+int AddAudioGenerator::write_all_frames(AVFormatContext *ctx, int stream_num) {
+    int ret;
+    AVPacket *packet = nullptr;
+
+    if (!(packet = av_packet_alloc())) {
+        PLOGD << "AddAudio: Couldn't allocate packet";
+        return -1;
+    }
+
+    while (true) {
+        if ((ret = av_read_frame(ctx, packet)) < 0) {
+            break;
+        }
+        packet->stream_index = stream_num;
+
+        // remux this frame without reencoding
+        // taking the first stream of source file
+        av_packet_rescale_ts(packet,
+                             ctx->streams[0]->time_base,
+                             ofmt_ctx->streams[stream_num]->time_base);
+
+        ret = av_interleaved_write_frame(ofmt_ctx, packet);
+        if (ret < 0) {
+            PLOGD << "av_interleaved_write_frame failed";
+            av_packet_free(&packet);
+            return -1;
+        }
+
+        av_packet_unref(packet);
+    }
+
+    av_packet_free(&packet);
     return 0;
 }
