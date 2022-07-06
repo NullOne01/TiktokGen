@@ -22,13 +22,46 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 add_subdirectory(${GLFW_DIR})
 
-set(FFMPEG_DIR ${LIB_DIR}/FFmpeg)
+set(FFMPEG_DIR ${LIB_DIR}/ffmpeg_build)
+set(FFMPEG_INCLUDE_DIR ${FFMPEG_DIR}/include)
+set(FFMPEG_LIB_DIR ${FFMPEG_DIR}/lib)
+
 find_package(PkgConfig REQUIRED)
-find_package(FFMPEG REQUIRED)
-include_directories(${FFMPEG_INCLUDE_DIRS})
-link_libraries(${FFMPEG_LIBRARY})
-link_libraries(${FFMPEG_LIBRARIES})
-link_libraries(${FFMPEG_LIBRARY_DIRS})
+pkg_check_modules(LIBAV REQUIRED IMPORTED_TARGET
+        libavdevice
+        libavfilter
+        libavformat
+        libavcodec
+        libswresample
+        libswscale
+        libavutil
+        )
+
+link_libraries(PkgConfig::LIBAV)
+message(JOPA)
+message(${LIBAV_FOUND})
+message(${LIBAV_LINK_LIBRARIES})
+
+#find_path(AVCODEC_INCLUDE_DIR libavcodec/avcodec.h)
+#find_library(AVCODEC_LIBRARY avcodec)
+#
+#find_path(AVFORMAT_INCLUDE_DIR libavformat/avformat.h)
+#find_library(AVFORMAT_LIBRARY avformat)
+#
+#find_path(AVUTIL_INCLUDE_DIR libavutil/avutil.h)
+#find_library(AVUTIL_LIBRARY avutil)
+#
+#find_path(AVDEVICE_INCLUDE_DIR libavdevice/avdevice.h)
+#find_library(AVDEVICE_LIBRARY avdevice)
+#
+#message(JOPA)
+#message(${AVCODEC_INCLUDE_DIR})
+#message(${AVCODEC_LIBRARY})
+#include_directories(${AVCODEC_INCLUDE_DIR} ${AVFORMAT_INCLUDE_DIR} ${AVUTIL_INCLUDE_DIR} ${AVDEVICE_INCLUDE_DIR})
+#link_libraries(${AVCODEC_LIBRARY} ${AVFORMAT_LIBRARY} ${AVUTIL_LIBRARY} ${AVDEVICE_LIBRARY})
+
+#include_directories(${FFMPEG_INCLUDE_DIR})
+#link_libraries(${FFMPEG_LIB_DIR}/libavcodec.a ${FFMPEG_LIB_DIR}/libavformat.a ${FFMPEG_LIB_DIR}/libavutil.a ${FFMPEG_LIB_DIR}/libavdevice.a)
 
 set(SDL2_DIR ${LIB_DIR}/SDL)
 set(SDL_STATIC ON CACHE BOOL "" FORCE)

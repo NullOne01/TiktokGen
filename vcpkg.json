@@ -1,7 +1,4 @@
 {
   "name": "tiktokgen",
-  "version-string": "0.1.0",
-  "dependencies": [
-    "ffmpeg"
-  ]
+  "version-string": "0.1.0"
 }
