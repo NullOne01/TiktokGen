@@ -22,6 +22,7 @@ private:
     std::string path_to_audio_;
 
     AVFormatContext *ifmt_ctx;
+    AVFormatContext *ifmt_audio_ctx;
     AVFormatContext *ofmt_ctx;
 
     typedef struct StreamContext {
@@ -31,8 +32,11 @@ private:
         AVFrame *dec_frame;
     } StreamContext;
     StreamContext *stream_ctx;
+    StreamContext *stream_audio_ctx;
 
     int open_input_file(const char *filename);
+
+    int open_input_audio(const char *filename);
 
     int open_output_file(const char *filename);
 };

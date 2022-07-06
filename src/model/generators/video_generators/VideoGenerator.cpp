@@ -19,7 +19,8 @@ void VideoGenerator::generate() {
 
     video.release();
 
-    std::string audio_name = "sample.mp3";
+    // .mp3 is not supported?
+    std::string audio_name = "resources/sample.aac";
     std::string output_name = "out2.mp4";
     std::unique_ptr<AudioGenerator> audio_gen = std::make_unique<AddAudioGenerator>(video_name, output_name,
                                                                                     audio_name);
