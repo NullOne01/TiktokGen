@@ -2,6 +2,7 @@
 #include "plog/Log.h"
 #include "../../../view_model/utils/StringFunctions.h"
 #include <utility>
+#include <iostream>
 #include <string>
 
 extern "C" {
@@ -33,6 +34,8 @@ void AddAudioGenerator::addAudio() {
         free_resources();
         return;
     }
+
+    ofmt_ctx->duration = ifmt_ctx->duration;
 
     if ((ret = write_all_frames(ifmt_ctx, 0)) < 0) {
         PLOGD << "AddAudio: Couldn't write video frames";
@@ -266,13 +269,15 @@ int AddAudioGenerator::open_input_audio(const char *filename) {
         }
         codec_ctx = avcodec_alloc_context3(dec);
         if (!codec_ctx) {
-            PLOGD << StringFunctions::stringFormat("AddAudio: Failed to allocate the decoder context for stream #%u", i);
+            PLOGD << StringFunctions::stringFormat("AddAudio: Failed to allocate the decoder context for stream #%u",
+                                                   i);
             return AVERROR(ENOMEM);
         }
         ret = avcodec_parameters_to_context(codec_ctx, stream->codecpar);
         if (ret < 0) {
-            PLOGD << StringFunctions::stringFormat("AddAudio: Failed to copy decoder parameters to input decoder context for stream #%u",
-                                                   i);
+            PLOGD << StringFunctions::stringFormat(
+                        "AddAudio: Failed to copy decoder parameters to input decoder context for stream #%u",
+                        i);
             return ret;
         }
         /* Reencode video & audio and remux subtitles etc. */
@@ -322,6 +327,14 @@ int AddAudioGenerator::write_all_frames(AVFormatContext *ctx, int stream_num) {
         av_packet_rescale_ts(packet,
                              ctx->streams[0]->time_base,
                              ofmt_ctx->streams[stream_num]->time_base);
+        // Trimming end of video.
+        if (stream_num != 0) {
+            AVRational r = {1, 1};
+            auto cmp = av_compare_ts(packet->pts, ofmt_ctx->streams[stream_num]->time_base, ofmt_ctx->duration / AV_TIME_BASE, r);
+            if (cmp >= 0) {
+                break;
+            }
+        }
 
         ret = av_interleaved_write_frame(ofmt_ctx, packet);
         if (ret < 0) {
