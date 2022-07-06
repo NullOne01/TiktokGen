@@ -5,14 +5,16 @@
 
 class AudioGenerator {
 public:
-    explicit AudioGenerator(const std::string &path_to_video);
+    explicit AudioGenerator(std::string path_to_video, std::string path_to_output);
 
     virtual void addAudio() = 0;
 
     virtual ~AudioGenerator();
 
-private:
+protected:
     std::string path_to_video_;
+
+    std::string path_to_output_;
 };
 
 

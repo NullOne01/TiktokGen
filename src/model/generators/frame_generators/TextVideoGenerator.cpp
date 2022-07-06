@@ -34,16 +34,18 @@ Generator<cv::Mat> TextVideoGenerator::frameGenerator() {
         cv::resize(background_video_frame, frame, {1080, 1920}, cv::INTER_CUBIC);
 
         double text_width = 400;
+        int font_height = 60;
+        int thickness = 1;
+        cv::Scalar text_color = cv::Scalar(255, 255, 255, 255);
         cv::Size multiline_size = TextFunctions::getSizeOfLines(ft2, text_, text_width,
-                                                                60, CV_RGB(255, 255, 255), 2,
-                                                                2);
-        cv::Point text_center(frame.cols / 2 - multiline_size.width / 2, frame.rows / 2 - multiline_size.height / 2);
+                                                                font_height, text_color, thickness);
+        cv::Point text_center((frame.cols - multiline_size.width) / 2, (frame.rows - multiline_size.height) / 2);
         // Replace with cv namespace?
         TextFunctions::putTextMultiline(ft2, frame,
                                         text_,
                                         text_center,
-                                        60, CV_RGB(255, 255, 255), text_width,
-                                        2);
+                                        font_height, text_color, text_width,
+                                        thickness);
 //        cv::putText(frame, //target image
 //                    lines, //text
 //                    cv::Point(10, frame.rows / 2), //top-left position

@@ -17,9 +17,11 @@ void VideoGenerator::generate() {
         video.write(frame);
     }
 
-    std::string audio_name = "sample.mp3";
-    std::unique_ptr<AudioGenerator> audio_gen = std::make_unique<AddAudioGenerator>(video_name, audio_name);
-    audio_gen->addAudio();
-
     video.release();
+
+    std::string audio_name = "sample.mp3";
+    std::string output_name = "out2.mp4";
+    std::unique_ptr<AudioGenerator> audio_gen = std::make_unique<AddAudioGenerator>(video_name, output_name,
+                                                                                    audio_name);
+    audio_gen->addAudio();
 }

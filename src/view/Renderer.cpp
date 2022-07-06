@@ -59,8 +59,6 @@ Renderer::Renderer() {
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
@@ -71,6 +69,8 @@ Renderer::Renderer() {
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     ImGuiIO &io = ImGui::GetIO();
+    // TODO (nullone): ImGUI can't render whole log while. This line below doesn't help
+    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
     ImFont *font = io.Fonts->AddFontFromFileTTF("resources/DejaVuSansCondensed.ttf", 18.0f, NULL,
                                                 io.Fonts->GetGlyphRangesCyrillic());
     IM_ASSERT(font != nullptr);
