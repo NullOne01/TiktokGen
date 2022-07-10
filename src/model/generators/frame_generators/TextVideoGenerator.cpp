@@ -2,6 +2,7 @@
 #include "plog/Log.h"
 #include "../../../view_model/utils/StringFunctions.h"
 #include "../../../view/utils/TextFunctions.h"
+#include "../requirements/InputTextRequirement.h"
 
 #include <utility>
 #include <iostream>
@@ -9,8 +10,10 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/freetype.hpp>
 
-TextVideoGenerator::TextVideoGenerator(std::string path_to_video, std::string text) : path_to_video_(std::move(
-        path_to_video)), text_(std::move(text)) {}
+TextVideoGenerator::TextVideoGenerator() {
+    requirements.push_back(std::make_unique<InputTextRequirement>("MainText"));
+    requirements.push_back(std::make_unique<VideoChooseRequirement>("BackgroundVideo"));
+}
 
 TextVideoGenerator::~TextVideoGenerator() = default;
 
@@ -58,4 +61,9 @@ Generator<cv::Mat> TextVideoGenerator::frameGenerator() {
     }
 
     co_return;
+}
+
+void TextVideoGenerator::loadData() {
+    text_ = requirements[0]->getValue();
+    path_to_video_ = requirements[1]->getValue();
 }

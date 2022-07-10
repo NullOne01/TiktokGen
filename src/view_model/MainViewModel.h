@@ -24,9 +24,9 @@ private:
 
     void showRequirementWindows();
 
-    void bindRequirement(const GeneratorRequirement &requirement, int data_index);
-
     void onGenerateButton();
+
+    void onSelectGenerator();
 };
 
 

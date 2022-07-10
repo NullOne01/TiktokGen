@@ -4,7 +4,7 @@
 #include <experimental/coroutine>
 #include "../Generator.h"
 #include "opencv2/core/mat.hpp"
-#include "utils/GeneratorRequirementType.h"
+#include "../requirements/GeneratorRequirement.h"
 
 class FrameGenerator {
 public:
@@ -12,7 +12,13 @@ public:
 
     virtual ~FrameGenerator();
 
-private:
+    virtual void loadData() {}
+
+    std::vector<std::unique_ptr<GeneratorRequirement<std::string>>> requirements;
+
+    void viewRequirements();
+
+    static FrameGenerator *createGenerator(int index);
 };
 
 

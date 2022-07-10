@@ -22,37 +22,32 @@ void MainViewModel::showMainWindow() {
         onGenerateButton();
     };
 
+    auto select_generator_lambda = [this]() {
+        onSelectGenerator();
+    };
+
     view_.chooseGeneratorWindow(&user_state_->chosen_generator, user_state_->generator_names,
-                                generator_lambda);
+                                generator_lambda, select_generator_lambda);
 }
 
 void MainViewModel::showRequirementWindows() {
-    auto &needed_requirements = user_state_->generator_requirements[user_state_->chosen_generator];
-
-    for (int i = 0; i < needed_requirements.size(); ++i) {
-        bindRequirement(needed_requirements[i], i);
+    if (user_state_->generator == nullptr) {
+        return;
     }
-}
 
-void MainViewModel::bindRequirement(const GeneratorRequirement &requirement, int data_index) {
-    switch (requirement.type) {
-        case NEED_TEXT :
-            view_.textInputWindow(requirement.name, &user_state_->data_[data_index]);
-            break;
-        case NEED_VIDEO:
-            view_.videoChooseWindow(requirement.name, &user_state_->data_[data_index]);
-            break;
-        case NONE:
-            break;
-    }
+    user_state_->generator->viewRequirements();
 }
 
 void MainViewModel::onGenerateButton() {
     LOGD << "User clicked generate button " + std::string(*user_state_);
 
-    std::unique_ptr<FrameGenerator> frame_generator(user_state_->createGenerator());
-    std::unique_ptr<VideoGenerator> video_generator = std::make_unique<VideoGenerator>(*frame_generator);
+    user_state_->generator->loadData();
+    std::unique_ptr<VideoGenerator> video_generator = std::make_unique<VideoGenerator>(*user_state_->generator);
     video_generator->generate();
 
     LOGD << "User generated video";
+}
+
+void MainViewModel::onSelectGenerator() {
+    user_state_->createGenerator();
 }

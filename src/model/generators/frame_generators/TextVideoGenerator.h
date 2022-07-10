@@ -3,20 +3,17 @@
 
 
 #include "FrameGenerator.h"
-#include "utils/GeneratorRequirement.h"
+#include "../requirements/VideoChooseRequirement.h"
 
 class TextVideoGenerator : public FrameGenerator {
 public:
-    TextVideoGenerator(std::string path_to_video, std::string text);
+    TextVideoGenerator();
 
     ~TextVideoGenerator() override;
 
     Generator<cv::Mat> frameGenerator() override;
 
-    inline const static std::vector<GeneratorRequirement> requirements = {
-            GeneratorRequirement("BackgroundVideo", NEED_VIDEO),
-            GeneratorRequirement("MainText", NEED_TEXT),
-    };
+    void loadData() override;
 
     inline const static std::string name = "TextVideoGenerator";
 

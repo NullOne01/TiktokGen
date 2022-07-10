@@ -3,7 +3,6 @@
 
 #include <string>
 #include <vector>
-#include "../generators/frame_generators/utils/GeneratorRequirementType.h"
 #include "../generators/frame_generators/FrameGenerator.h"
 #include "../generators/frame_generators/TextVideoGenerator.h"
 #include "../generators/frame_generators/NoneGenerator.h"
@@ -12,23 +11,11 @@ class UserState {
 public:
     int chosen_generator = 0;
 
-    std::vector<std::string> data_ = std::vector<std::string>(5);
+    std::unique_ptr<FrameGenerator> generator;
 
-    FrameGenerator *createGenerator() {
-        switch (chosen_generator) {
-            case 0:
-                return new NoneGenerator();
-            case 1:
-                return new TextVideoGenerator(data_[0], data_[1]);
-        }
-
-        throw std::invalid_argument("Unknown generator");
+    void createGenerator() {
+        generator = std::unique_ptr<FrameGenerator>(FrameGenerator::createGenerator(chosen_generator));
     }
-
-    const std::vector<std::vector<GeneratorRequirement>> generator_requirements = {
-            NoneGenerator::requirements,
-            TextVideoGenerator::requirements
-    };
 
     const std::vector<std::string> generator_names = {
             NoneGenerator::name,

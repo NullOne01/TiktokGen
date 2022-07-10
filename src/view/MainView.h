@@ -15,17 +15,12 @@ public:
 
     void matWindow(const cv::Mat &image) const;
 
-    void textInputWindow(const std::string &name, std::string *text) const;
-
-    void videoChooseWindow(const std::string &name, std::string *path);
-
     void chooseGeneratorWindow(int *generator_num, const std::vector<std::string> &items,
-                               const std::function<void(void)> &generate_button_callback) const;
+                               const std::function<void(void)> &generate_button_callback,
+                               const std::function<void(void)> &generator_select_callback) const;
 
 private:
     const Renderer &renderer_;
-
-    ImGui::FileBrowser choose_video_dialog_;
 };
 
 

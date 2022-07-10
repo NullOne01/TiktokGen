@@ -7,8 +7,6 @@
 #include <utility>
 
 MainView::MainView(const Renderer &renderer) : renderer_(renderer) {
-    choose_video_dialog_.SetTitle("Choose video");
-    choose_video_dialog_.SetTypeFilters({".avi", ".mp4"});
 }
 
 void MainView::logWindow(const std::string &log) const {
@@ -35,32 +33,9 @@ void MainView::matWindow(const cv::Mat &image) const {
     ImGui::End();
 }
 
-void MainView::textInputWindow(const std::string &name, std::string *text) const {
-    std::string window_name = "Text editor. Parameter: " + name;
-    ImGui::Begin(window_name.c_str());
-    ImGui::InputText("Text", text);
-    ImGui::End();
-}
-
-void MainView::videoChooseWindow(const std::string &name, std::string *path) {
-    std::string window_name = "Choose video. Parameter: " + name;
-    ImGui::Begin(window_name.c_str());
-    if (ImGui::Button("Open file dialog")) {
-        choose_video_dialog_.Open();
-    }
-    ImGui::Text("You've chosen: %s", (*path).c_str());
-    ImGui::End();
-
-    choose_video_dialog_.Display();
-
-    if (choose_video_dialog_.HasSelected()) {
-        *path = choose_video_dialog_.GetSelected().string();
-        choose_video_dialog_.ClearSelected();
-    }
-}
-
 void MainView::chooseGeneratorWindow(int *generator_num, const std::vector<std::string> &items,
-                                     const std::function<void(void)> &generate_button_callback) const {
+                                     const std::function<void(void)> &generate_button_callback,
+                                     const std::function<void(void)> &generator_select_callback) const {
     ImGui::Begin("Main window");
 
     if (ImGui::BeginCombo("##combo", items[*generator_num].c_str())) {
@@ -68,6 +43,7 @@ void MainView::chooseGeneratorWindow(int *generator_num, const std::vector<std::
             bool is_selected = (*generator_num == i);
             if (ImGui::Selectable(items[i].c_str(), is_selected)) {
                 *generator_num = i;
+                generator_select_callback();
             }
 
             if (is_selected) {
