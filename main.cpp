@@ -9,9 +9,12 @@
 #include "plog/Initializers/RollingFileInitializer.h"
 #include "src/view_model/MainViewModel.h"
 #include "plog/Log.h"
+#include "src/model/user/Config.h"
 
 int main() {
     plog::init(plog::debug, "DebugLog.txt");
+    // Here should be your config file.
+    Config::init("resources/config.cfg");
 
     try {
         Renderer renderer;
