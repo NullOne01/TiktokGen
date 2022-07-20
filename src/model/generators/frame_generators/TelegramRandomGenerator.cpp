@@ -1,24 +1,22 @@
-#include "TextVideoGenerator.h"
-#include "plog/Log.h"
-#include "../../../view_model/utils/StringFunctions.h"
-#include "../../../view/utils/TextFunctions.h"
-#include "../requirements/InputTextRequirement.h"
-#include "../requirements/TelegramRandomRequirement.h"
-
-#include <utility>
-#include <iostream>
-#include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/freetype.hpp>
+#include <opencv2/imgproc.hpp>
+#include "TelegramRandomGenerator.h"
+#include "../requirements/VideoChooseRequirement.h"
+#include "../requirements/TelegramRandomRequirement.h"
+#include "plog/Log.h"
+#include "../../../view/utils/TextFunctions.h"
 
-TextVideoGenerator::TextVideoGenerator() {
-    requirements.push_back(std::make_unique<InputTextRequirement>("MainText"));
+TelegramRandomGenerator::TelegramRandomGenerator() {
     requirements.push_back(std::make_unique<VideoChooseRequirement>("BackgroundVideo"));
+    requirements.push_back(std::make_unique<TelegramRandomRequirement>("TelegramRandom"));
 }
 
-TextVideoGenerator::~TextVideoGenerator() = default;
+TelegramRandomGenerator::~TelegramRandomGenerator() {
 
-Generator<cv::Mat> TextVideoGenerator::frameGenerator() {
+}
+
+Generator<cv::Mat> TelegramRandomGenerator::frameGenerator() {
     cv::VideoCapture background_video_;
     background_video_.open(path_to_video_);
     if (!background_video_.isOpened()) {
@@ -41,12 +39,12 @@ Generator<cv::Mat> TextVideoGenerator::frameGenerator() {
         int font_height = 60;
         int thickness = 1;
         cv::Scalar text_color = cv::Scalar(255, 255, 255, 255);
-        cv::Size multiline_size = TextFunctions::getSizeOfLines(ft2, text_, text_width,
+        cv::Size multiline_size = TextFunctions::getSizeOfLines(ft2, telegram_text_, text_width,
                                                                 font_height, text_color, thickness);
         cv::Point text_center((frame.cols - multiline_size.width) / 2, (frame.rows - multiline_size.height) / 2);
         // Replace with cv namespace?
         TextFunctions::putTextMultiline(ft2, frame,
-                                        text_,
+                                        telegram_text_,
                                         text_center,
                                         font_height, text_color, text_width,
                                         thickness);
@@ -64,7 +62,7 @@ Generator<cv::Mat> TextVideoGenerator::frameGenerator() {
     co_return;
 }
 
-void TextVideoGenerator::loadData() {
-    text_ = requirements[0]->getValue();
-    path_to_video_ = requirements[1]->getValue();
+void TelegramRandomGenerator::loadData() {
+    path_to_video_ = requirements[0]->getValue();
+    telegram_text_ = requirements[1]->getValue();
 }

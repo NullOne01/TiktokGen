@@ -28,3 +28,6 @@
 [submodule "modules/vcpkg"]
 	path = modules/vcpkg
 	url = https://github.com/microsoft/vcpkg
+[submodule "modules/td"]
+	path = modules/td
+	url = https://github.com/tdlib/td.git

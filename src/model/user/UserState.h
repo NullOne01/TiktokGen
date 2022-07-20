@@ -6,6 +6,8 @@
 #include "../generators/frame_generators/FrameGenerator.h"
 #include "../generators/frame_generators/TextVideoGenerator.h"
 #include "../generators/frame_generators/NoneGenerator.h"
+#include "../generators/frame_generators/TelegramRandomGenerator.h"
+#include "ConfigRead.h"
 
 class UserState {
 public:
@@ -19,7 +21,8 @@ public:
 
     const std::vector<std::string> generator_names = {
             NoneGenerator::name,
-            TextVideoGenerator::name
+            TextVideoGenerator::name,
+            TelegramRandomGenerator::name
     };
 
     explicit operator std::string() const {

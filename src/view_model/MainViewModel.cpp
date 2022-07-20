@@ -3,7 +3,8 @@
 #include "utils/LogFunctions.h"
 #include "../model/generators/video_generators/VideoGenerator.h"
 
-MainViewModel::MainViewModel(MainView &view) : view_(view) {}
+MainViewModel::MainViewModel(MainView &view) : view_(view) {
+}
 
 void MainViewModel::onFrame() {
     showMainWindow();
