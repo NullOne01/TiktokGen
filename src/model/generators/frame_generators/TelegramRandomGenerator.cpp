@@ -35,26 +35,22 @@ Generator<cv::Mat> TelegramRandomGenerator::frameGenerator() {
         background_video_.read(background_video_frame);
         cv::resize(background_video_frame, frame, {1080, 1920}, cv::INTER_CUBIC);
 
-        double text_width = 400;
-        int font_height = 60;
+        double text_width = 500;
+        double text_height = 400;
         int thickness = 1;
         cv::Scalar text_color = cv::Scalar(255, 255, 255, 255);
+        int font_height = TextFunctions::getBestFontHeight(ft2, frame, telegram_text_, text_height, text_width,
+                                                           thickness);
+
         cv::Size multiline_size = TextFunctions::getSizeOfLines(ft2, telegram_text_, text_width,
                                                                 font_height, text_color, thickness);
         cv::Point text_center((frame.cols - multiline_size.width) / 2, (frame.rows - multiline_size.height) / 2);
-        // Replace with cv namespace?
+
         TextFunctions::putTextMultiline(ft2, frame,
                                         telegram_text_,
-                                        text_center,
-                                        font_height, text_color, text_width,
+                                        text_center, font_height,
+                                        text_color, text_width,
                                         thickness);
-//        cv::putText(frame, //target image
-//                    lines, //text
-//                    cv::Point(10, frame.rows / 2), //top-left position
-//                    cv::FONT_HERSHEY_DUPLEX,
-//                    1.0,
-//                    CV_RGB(0, 0, 0), //font color
-//                    2);
 
         co_yield frame;
     }

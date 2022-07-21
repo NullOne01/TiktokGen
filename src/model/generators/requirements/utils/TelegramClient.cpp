@@ -32,14 +32,24 @@ void TelegramClient::query_last_message(const std::string &chat_name, std::strin
         auto chat_found = td::move_tl_object_as<td::td_api::chat>(object);
         int64_t chat_id = chat_found->id_;
 
-        send_query(td::td_api::make_object<td::td_api::getChatHistory>(chat_id, 0, 0, 1, false),
-                   [last_message](Object object) {
-                       auto messages = td::move_tl_object_as<td::td_api::messages>(object);
-                       // TODO: this line can show errors, if message is not message text.
-                       auto message_text = td::move_tl_object_as<td::td_api::messageText>(
-                               messages->messages_[0]->content_);
-                       *last_message = message_text->text_->text_;
-                   }
+        int message_pool_size = 99;
+        send_query(
+                td::td_api::make_object<td::td_api::getChatHistory>(chat_id, 0, 0, message_pool_size,
+                                                                    false),
+                [last_message, message_pool_size](Object object) {
+                    auto messages = td::move_tl_object_as<td::td_api::messages>(object);
+                    // TODO: this line can show errors, if message is not message text.
+                    for (int i = 0; i < messages->total_count_; ++i) {
+                        if (messages->messages_[i]->content_->get_id() != td::td_api::messageText::ID) {
+                            continue;
+                        }
+
+                        auto message_text = td::move_tl_object_as<td::td_api::messageText>(
+                                messages->messages_[i]->content_);
+                        *last_message = message_text->text_->text_;
+                        break;
+                    }
+                }
         );
     });
 }

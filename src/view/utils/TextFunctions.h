@@ -7,26 +7,29 @@
 #include "../../view_model/utils/StringFunctions.h"
 
 struct TextFunctions {
+    static const int height_offset = 5;
+
     static void putTextMultiline(cv::InputOutputArray img, const cv::String &text, cv::Point org,
                                  int fontFace, double fontScale, cv::Scalar color,
                                  double prefWidth,
                                  int thickness = 1, int lineType = cv::LINE_8) {
         int baseline = 0;
         cv::Size text_size = cv::getTextSize(text, fontFace, fontScale, thickness, &baseline);
-        double width_per_char = text_size.width / text.size();
+        double width_per_char = text_size.width / StringFunctions::utf8_length(text);
         int char_per_line = prefWidth / width_per_char;
 
         std::vector<std::string> lines = StringFunctions::getLinesFixedWidth(text, char_per_line);
         putTextMultiline(img, lines, org, fontFace, fontScale, color, thickness, lineType);
     }
 
-    static void putTextMultiline(cv::Ptr<cv::freetype::FreeType2> ft2, cv::InputOutputArray img, const cv::String &text, cv::Point org,
+    static void putTextMultiline(cv::Ptr<cv::freetype::FreeType2> ft2, cv::InputOutputArray img, const cv::String &text,
+                                 cv::Point org,
                                  int fontHeight, cv::Scalar color,
                                  double prefWidth,
                                  int thickness = 1, int lineType = cv::LINE_8) {
         int baseline = 0;
         cv::Size text_size = ft2->getTextSize(text, fontHeight, thickness, &baseline);
-        double width_per_char = text_size.width / text.size();
+        double width_per_char = text_size.width / StringFunctions::utf8_length(text);
         int char_per_line = prefWidth / width_per_char;
 
         std::vector<std::string> lines = StringFunctions::getLinesFixedWidth(text, char_per_line);
@@ -46,7 +49,7 @@ struct TextFunctions {
                         fontScale,
                         color, //font color
                         thickness, lineType);
-            org += cv::Point(0, text_size.height);
+            org += cv::Point(0, text_size.height + height_offset);
         }
     }
 
@@ -65,7 +68,7 @@ struct TextFunctions {
                          thickness,
                          lineType,
                          false);
-            org += cv::Point(0, text_size.height);
+            org += cv::Point(0, text_size.height + height_offset);
         }
     }
 
@@ -92,7 +95,7 @@ struct TextFunctions {
         int max_height = 0;
         for (const auto &line: lines) {
             cv::Size text_size = ft2->getTextSize(line, fontHeight, thickness, &baseline);
-            max_height += text_size.height;
+            max_height += text_size.height + height_offset;
             max_width = std::max(max_width, text_size.width);
         }
 
@@ -104,7 +107,7 @@ struct TextFunctions {
                                    int thickness = 1, int lineType = cv::LINE_8) {
         int baseline = 0;
         cv::Size text_size = cv::getTextSize(big_line, fontFace, fontScale, thickness, &baseline);
-        double width_per_char = text_size.width / big_line.size();
+        double width_per_char = text_size.width / StringFunctions::utf8_length(big_line);
         int char_per_line = prefWidth / width_per_char;
 
         std::vector<std::string> lines = StringFunctions::getLinesFixedWidth(big_line, char_per_line);
@@ -116,14 +119,35 @@ struct TextFunctions {
                                    int thickness = 1, int lineType = cv::LINE_8) {
         int baseline = 0;
         cv::Size text_size = ft2->getTextSize(big_line, fontHeight, thickness, &baseline);
-        double width_per_char = text_size.width / big_line.size();
+        double width_per_char = text_size.width / StringFunctions::utf8_length(big_line);
         int char_per_line = prefWidth / width_per_char;
 
         std::vector<std::string> lines = StringFunctions::getLinesFixedWidth(big_line, char_per_line);
         return getSizeOfLines(ft2, lines, fontHeight, color, thickness, lineType);
     }
 
+    static int getBestFontHeight(cv::Ptr<cv::freetype::FreeType2> ft2, cv::InputOutputArray img, const cv::String &text,
+                                 double prefHeight, double prefWidth, int thickness = 1) {
+        int font_size;
+        for (font_size = 60; font_size > 1; font_size--) {
+            cv::Size multiline_size = TextFunctions::getSizeOfLines(ft2, text, prefWidth, font_size,
+                                                                    cv::Scalar(255, 255, 255, 255),
+                                                                    thickness);
+            if (multiline_size.height <= prefHeight) {
+                break;
+            }
+        }
 
+        return font_size;
+    }
+
+    static void putTextMultiline(cv::Ptr<cv::freetype::FreeType2> ft2, cv::InputOutputArray img, const cv::String &text,
+                                 cv::Point org, cv::Scalar color,
+                                 double prefHeight, double prefWidth,
+                                 int thickness = 1, int lineType = cv::LINE_8) {
+        int font_size = getBestFontHeight(ft2, img, text, prefHeight, prefWidth, thickness);
+        putTextMultiline(ft2, img, text, org, font_size, color, prefWidth, thickness, lineType);
+    }
 };
 
 #endif //TIKTOKGEN_TEXTFUNCTIONS_H

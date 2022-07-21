@@ -16,18 +16,28 @@ struct StringFunctions {
     }
 
     static std::vector<std::string> getLinesFixedWidth(const std::string &base_text, int max_char_line) {
-        std::vector<std::string> words = split(base_text, " ");
+        std::vector<std::string> lines = split(base_text, "\n");
         std::vector<std::string> res;
-        std::string new_word;
-        for (auto &word: words) {
-            if (new_word.size() + word.size() > max_char_line) {
-                res.push_back(new_word);
-                new_word = "";
+
+        for (auto &line: lines) {
+            if (utf8_length(line) <= max_char_line) {
+                res.push_back(line);
+                continue;
             }
 
-            new_word += word + " ";
+            std::vector<std::string> words = split(line, " ");
+            std::string new_line;
+            for (auto &word: words) {
+                if (utf8_length(new_line) + utf8_length(word) > max_char_line) {
+                    res.push_back(new_line);
+                    new_line = "";
+                }
+
+                new_line += word + " ";
+            }
+
+            res.push_back(new_line);
         }
-        res.push_back(new_word);
 
         return res;
     }
@@ -54,14 +64,30 @@ struct StringFunctions {
     }
 
     template<typename ... Args>
-    static std::string stringFormat(const std::string& format, Args ... args )
-    {
-        int size_s = std::snprintf( nullptr, 0, format.c_str(), args ... ) + 1; // Extra space for '\0'
-        if( size_s <= 0 ){ throw std::runtime_error( "Error during formatting." ); }
+    static std::string stringFormat(const std::string &format, Args ... args) {
+        int size_s = std::snprintf(nullptr, 0, format.c_str(), args ...) + 1; // Extra space for '\0'
+        if (size_s <= 0) { throw std::runtime_error("Error during formatting."); }
         auto size = static_cast<size_t>( size_s );
-        std::unique_ptr<char[]> buf( new char[ size ] );
-        std::snprintf( buf.get(), size, format.c_str(), args ... );
-        return std::string( buf.get(), buf.get() + size - 1 ); // We don't want the '\0' inside
+        std::unique_ptr<char[]> buf(new char[size]);
+        std::snprintf(buf.get(), size, format.c_str(), args ...);
+        return std::string(buf.get(), buf.get() + size - 1); // We don't want the '\0' inside
+    }
+
+    static std::size_t utf8_length(std::string const &s) {
+        size_t len = 0;
+        unsigned char c = s[0];
+        for (size_t i = 1; c != 0; ++len, ++i) {
+            if ((c & 0x80)) {
+                if (c < 0xC0)   // Invalid increment
+                    return 0;
+                c >>= 4;
+                if (c == 12)
+                    c++;
+                i += c - 12;
+            }
+            c = s[i];
+        }
+        return len;
     }
 };
 

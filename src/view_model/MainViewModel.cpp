@@ -14,7 +14,7 @@ void MainViewModel::onFrame() {
 
 void MainViewModel::showLogWindow() {
     // Read whole log file each tick? Sounds great!
-    last_read_log_ = LogFunctions::getNewLogs();
+    // last_read_log_ = LogFunctions::getNewLogs();
     view_.logWindow(last_read_log_);
 }
 
