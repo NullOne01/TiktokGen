@@ -46,6 +46,11 @@ Currently, there is only one generator supported:
 ![example1](resources/example1.jpg)
 </details>
 
+## Missing libs in repo
+In directory "Modules" there should be compiled libs of
+OpenCV (with extra) and tdlib. You can check cmake 
+to understand how they were used.
+
 ## TODO (there is much to do actually):
 1) Upload generate videos into TikTok. TikTok supports some kind of API, but
 you need to be verified to use it. You can use some virtual browser like
