@@ -18,11 +18,11 @@ Choose generator type
 ### Step 2
 Enter data which is required for your generator type.<br>
 It can be:
-1) Background video:
+1) Background video: <br>
 ![guide step 2_1](resources/guide2.jpg)
-2) Raw text:
+2) Raw text: <br>
 ![guide step 2_2](resources/guide3.jpg)
-3) Telegram API post grabber:
+3) Telegram API post grabber: <br>
 ![guide step 2_3](resources/guide4.jpg)
 
 ### Step 3
